@@ -1,5 +1,7 @@
 package Pigmap;
 
+import Pigmap.Windows.AddChildTask;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -7,8 +9,23 @@ import javax.swing.event.MouseInputAdapter;
 import javax.swing.event.TreeModelListener;
 import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreePath;
-
 import java.util.LinkedList;
+
+
+import static Pigmap.MindMap.panel;
+import static Pigmap.TreeNode.Moveall;
+/*
+此部分分工
+树tree的设置：廖仁杰
+节点treenode的属性设置（大小，背景，链接，备注，图标） 廖仁杰
+节点treenode的移动，添加，删除，获取节点的信息         张凯航
+鼠标移动监听：张凯航
+鼠标点击，进入离开监听：廖仁杰
+链接添加：廖仁杰
+ */
+
+
+//使用树结构的节点类
 
 public class Tree implements TreeModel//创建的树结构
 {
@@ -30,19 +47,19 @@ public class Tree implements TreeModel//创建的树结构
 	public void valueForPathChanged(TreePath path, Object newValue) {}
 	public Object getChild(Object arg0, int arg1) {
 		TreeNode node = (TreeNode)arg0;
-		return node.Children().get(arg1);
+		return node.getList().get(arg1);
 	}
 	public int getChildCount(Object parent) {
 		TreeNode node = (TreeNode)parent;
-		return node.Children().size();
+		return node.getList().size();
 	}
 	public int getIndexOfChild(Object parent, Object child) {
 		TreeNode node = (TreeNode)parent;
-		return node.Children().indexOf(child);
+		return node.getList().indexOf(child);
 	}
 	public boolean isLeaf(Object node) {
 		TreeNode tnode = (TreeNode)node;
-		return tnode.Children().size()==0;
+		return tnode.getList().size()==0;
 	}
 	public void Draw(Graphics g)
 	{
@@ -119,54 +136,251 @@ public class Tree implements TreeModel//创建的树结构
 
 	private TreeNode root;
 }
-
+//节点类
 class TreeNode extends JLabel
 {
+	public static JPopupMenu popupMenu;//右键菜单
+	public  static String copy;//节点的文字
+	public  static Icon icon;//节点图标
+	public  String weblink;//网页链接
+	public  String notepad;//备注
+
+
 	public TreeNode(String s)
 	{
 		children = new LinkedList<TreeNode>();
 		setText(s);
+		weblink=null;
+		notepad=null;
+		Dimension d=new Dimension(s.length()*20,50);
 		setOpaque(true);
-        setSize(new Dimension(100,50));
+		setSize(d);
 		setHorizontalAlignment(CENTER);
-		setFont(new Font("微软雅黑", Font.BOLD, 17));//设置节点的文字
+		setFont(new Font("微软雅黑", Font.PLAIN, 18));//设置节点的文字
 		MouseInputHandler h = new MouseInputHandler();
 		setForeground(Color.WHITE);
 		setBackground(Color.DARK_GRAY);
+		repaint();
+
+
 		c = getBackground();
 		addMouseListener(h);
 		addMouseMotionListener(h);
-//		addFocusListener(new FocusListener() {//键盘焦点监听器，用来监听键盘的事件
-//			public void focusGained(FocusEvent e)
-//			{
-//				TreeNode node = (TreeNode)e.getSource();
-//				Parameter.Instance().Update(node);
-//				int r = c.getRed();
-//				int g = c.getGreen();
-//				int b = c.getBlue();
-//				//Color nc = new Color(255-r, 255-g,255-b);
-//				Color nc=Color.GREEN;
-//				node.setBackground(nc);
-//				if(node.getForeground() == Color.BLACK)
-//					node.setForeground(Color.WHITE);
-//				else
-//					node.setForeground(Color.BLACK);
-//			}
-//			public void focusLost(FocusEvent e)
-//			{
-//				TreeNode node = (TreeNode)e.getSource();
-//				node.setBackground(c);
-//				if(node.getForeground() == Color.BLACK)
-//					node.setForeground(Color.WHITE);
-//				else
-//					node.setForeground(Color.BLACK);
-//			}
-//		});
-	}
+		popupMenu=new JPopupMenu();
+		JMenuItem bt=new JMenuItem("修改内容");
+		JMenuItem bt1=new JMenuItem("添加节点");
+		JMenuItem bt2=new JMenuItem("复制节点");
+		JMenuItem bt3=new JMenuItem("粘贴节点");
+		JMenu bt4=new JMenu("功能图标");
+		JMenu bt5=new JMenu("属性图标");
+		JMenu bt6=new JMenu("事件图标");
+		JMenuItem bt7=new JMenuItem("删除图标");
+		JMenuItem bt8=new JMenuItem("添加备注");
+		JMenuItem bt9=new JMenuItem("显示备注");
+		JMenuItem bt10=new JMenuItem("删除节点");
 
+		bt4.add(iconSet.Instance().task.m1);
+		bt4.add(iconSet.Instance().task.m2);
+		bt4.add(iconSet.Instance().task.m3);
+		bt4.add(iconSet.Instance().task.m4);
+		bt4.add(iconSet.Instance().task.m5);
+		bt4.add(iconSet.Instance().task.m6);
+		bt4.add(iconSet.Instance().task.m7);
+		bt4.add(iconSet.Instance().task.m8);
+		bt4.add(iconSet.Instance().task.m9);
+
+
+		bt5.add(iconSet.Instance().flag.m1);
+		bt5.add(iconSet.Instance().flag.m2);
+		bt5.add(iconSet.Instance().flag.m3);
+		bt5.add(iconSet.Instance().flag.m4);
+		bt5.add(iconSet.Instance().flag.m5);
+		bt5.add(iconSet.Instance().flag.m6);
+		bt5.add(iconSet.Instance().flag.m7);
+		bt5.add(iconSet.Instance().flag.m8);
+		bt5.add(iconSet.Instance().flag.m9);
+		bt5.add(iconSet.Instance().flag.m10);
+		bt5.add(iconSet.Instance().flag.m11);
+		bt5.add(iconSet.Instance().flag.m12);
+		bt5.add(iconSet.Instance().flag.m13);
+		bt5.add(iconSet.Instance().flag.m14);
+		bt5.add(iconSet.Instance().flag.m15);
+
+		bt6.add(iconSet.Instance().work.m1);
+		bt6.add(iconSet.Instance().work.m2);
+		bt6.add(iconSet.Instance().work.m3);
+		bt6.add(iconSet.Instance().work.m4);
+		bt6.add(iconSet.Instance().work.m5);
+		bt6.add(iconSet.Instance().work.m6);
+		bt6.add(iconSet.Instance().work.m7);
+		bt6.add(iconSet.Instance().work.m8);
+		bt6.add(iconSet.Instance().work.m9);
+		bt6.add(iconSet.Instance().work.m10);
+		bt6.add(iconSet.Instance().work.m11);
+		bt6.add(iconSet.Instance().work.m12);
+		bt6.add(iconSet.Instance().work.m13);
+		bt6.add(iconSet.Instance().work.m14);
+
+
+		bt.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt1.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt2.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt3.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt4.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt5.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt6.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt7.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt8.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt9.setFont(new Font("微软雅黑",Font.BOLD,15));
+		bt10.setFont(new Font("微软雅黑",Font.BOLD,15));
+
+		JTextArea textArea=new JTextArea();
+		textArea.setSize(160, 60);
+		textArea.setFont(new Font("宋体",Font.PLAIN,15));
+		textArea.setLineWrap(true);
+		textArea.setWrapStyleWord(true);
+		JScrollPane jScrollPane=new JScrollPane(textArea);
+		jScrollPane.setSize(180,60);
+		popupMenu.add(jScrollPane);
+		popupMenu.add(bt);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt1);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt2);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt3);
+		popupMenu.addSeparator();
+		popupMenu.add(bt4);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt5);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt6);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt7);
+		panel.add(popupMenu);
+		popupMenu.addSeparator();
+		popupMenu.add(bt8);
+		panel.add(popupMenu);
+		//popupMenu.addSeparator();
+		popupMenu.add(bt9);
+		panel.add(popupMenu);
+		popupMenu.addSeparator();
+		popupMenu.add(bt10);
+		panel.add(popupMenu);
+		popupMenu.getComponent();
+		popupMenu.setEnabled(true);
+		//添加修改的监听
+		// TODO 自动生成的方法存根
+		bt.addActionListener(new ActionListener() {//添加文本内容到节点
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO 自动生成的方法存根
+				if (Sidebar.Instance().GetTarget() == null)
+					return;
+				if (textArea.getText().length() == 0) {
+					return;
+				}
+				else if(Sidebar.Instance().GetTarget().getIcon()!=null){
+					Sidebar.Instance().GetTarget().setText(textArea.getText());
+					Sidebar.Instance().GetTarget().setSize(new Dimension(textArea.getText().length() * 20+32, 50));
+					setHorizontalAlignment(CENTER);
+				}
+				else if(Sidebar.Instance().GetTarget().getIcon()==null){
+					Sidebar.Instance().GetTarget().setText(textArea.getText());
+					Sidebar.Instance().GetTarget().setSize(new Dimension(textArea.getText().length() * 20, 50));
+					setHorizontalAlignment(CENTER);
+				}
+			}
+
+
+		});
+		//添加第二种增添节点的监听
+		bt1.addActionListener(new ActionListener() {//添加节点
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(Sidebar.Instance().GetTarget()==null)
+					return;
+				if(textArea.getText().length()==0)
+					return;
+				else {
+					String str=textArea.getText();
+					AddChildTask addChildTask= new AddChildTask(Sidebar.Instance().GetTarget(),str);
+					addChildTask.addChild();
+					}
+
+				}
+
+
+		});
+		bt2.addActionListener(new ActionListener() {//复制
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(Sidebar.Instance().GetTarget()==null)
+					return;
+				else{
+					 copy= Sidebar.Instance().GetTarget().getText();
+					 icon= Sidebar.Instance().GetTarget().getIcon();
+
+				}
+			}
+		});
+		bt3.addActionListener(new ActionListener() {//粘贴
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(Sidebar.Instance().GetTarget()==null)
+					return;
+				else{
+					AddChildTask addChildTask= new AddChildTask(Sidebar.Instance().GetTarget(),copy);
+					addChildTask.addChild();
+
+				}
+			}
+		});
+		bt7.addActionListener(new ActionListener() {//删除图标
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if(Sidebar.Instance().GetTarget().getIcon()!=null){
+				Sidebar.Instance().GetTarget().setIcon(null);
+				Sidebar.Instance().GetTarget().setSize(Sidebar.Instance().GetTarget().getWidth()-32,50);
+				Sidebar.Instance().GetTarget().repaint();
+				Sidebar.Instance().GetTarget().setVisible(true);}
+				else return;
+			}
+		});
+		bt8.addActionListener(new ActionListener() {//新建备注
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Note.Instance().setText(null);
+				Note.Instance().setNote();
+			}
+		});
+		bt9.addActionListener(new ActionListener() {//显示备注
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				Note.Instance().shownote();
+			}
+		});
+		bt10.addActionListener(new ActionListener() {//删除节点
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				AddChildTask del=new AddChildTask(Sidebar.Instance().GetTarget(), Sidebar.Instance().GetTarget().getText());
+				del.delChild();
+			}
+		});
+
+	}
+	//迭代的移动整体节点
+	public static void Moveall(TreeNode node,int dx,int dy){
+		node.setLocation(node.getX()+dx,node.getY()+dy);
+		for(TreeNode child:node.getList()){
+			Moveall(child,dx,dy);
+		}
+
+	}
 	public void Draw(Graphics g)
 	{
-		int bold = 3;
+		int bold = 2;
 		((Graphics2D)g).setStroke(new BasicStroke(bold, BasicStroke.CAP_BUTT, BasicStroke.JOIN_BEVEL));
 		((Graphics2D)g).setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -176,7 +390,7 @@ class TreeNode extends JLabel
 		if(parent == null)
 			return;
 
-		g.setColor(Color.BLUE);
+		g.setColor(Color.BLACK);
 		Vec2[] pvs = new Vec2[4];
 		Vec2[] cvs = new Vec2[4];
 		pvs[0] = new Vec2(parent.getX()+parent.getWidth(), parent.getY()+parent.getHeight()/2);
@@ -196,43 +410,31 @@ class TreeNode extends JLabel
 					pv=pvs[i];
 					cv=cvs[j];
 				}
-		//g.drawLine((int)cv.x, (int)cv.y, (int)pv.x, (int)pv.y);
 		g.drawLine((int)pv.x, (int)pv.y, (int)cv.x, (int)cv.y);
-
-		Vec2 nv = cv.Sub(pv);
-		nv = nv.Normalize();
-		nv = nv.Rotate(20);
-		nv = nv.Multiply(16);
-		//g.drawLine((int)pv.x, (int)pv.y, (int)(nv.x+pv.x), (int)(nv.y+pv.y));
-		g.drawLine((int)(nv.x+pv.x), (int)(nv.y+pv.y),(int)pv.x, (int)pv.y);
-		nv = cv.Sub(pv);
-		nv = nv.Normalize();
-		nv = nv.Rotate(-20);
-		nv = nv.Multiply(16);
-		g.drawLine((int)(nv.x+pv.x), (int)(nv.y+pv.y),(int)pv.x, (int)pv.y);//前两句反过来
 	}
 
 	public void AddChild(TreeNode node)
 	{
-		AddChild(node, true);
+		AddChild(node, true);//shou'dong
 	}
 
 	public void AddChild(TreeNode node, boolean auto_positioning)
 	{
 		if(auto_positioning)
 		{
-			Point pos = getLocation();
-			pos.translate(children.size()*150, 150);
+			Point pos = getLocation();//得到当前的位置
+			pos.translate(children.size()*150, 150);//用来位移坐标
 			node.setLocation(pos);
 		}
 		node.parent = this;
-		children.add(node);
+		this.getList().add(node);
 	}
 
 	public void RemoveChild(TreeNode node)
 	{
-		node.parent = null;
-		children.remove(node);
+		//node.parent = null;
+		node.parent.getList().remove(node);//从链表里面删除节点的信息并且重新绘制
+
 
 	}
 
@@ -241,10 +443,12 @@ class TreeNode extends JLabel
 		return parent;
 	}
 
-	public LinkedList<TreeNode> Children()
+	public LinkedList<TreeNode> getList()
 	{
 		return children;
 	}
+
+
 
 	public int MaxX()
 	{
@@ -280,18 +484,6 @@ class TreeNode extends JLabel
 			setForeground(Color.BLACK);
 	}
 
-	public void FindAndSetFocus(String name)
-	{
-		if(getText().equals(name))
-		{
-			requestFocus();
-		}
-		else
-		{
-			for(TreeNode i:children)
-				i.FindAndSetFocus(name);
-		}
-	}
 
 	private Color c;
 	private TreeNode parent;
@@ -301,152 +493,156 @@ class TreeNode extends JLabel
 
 }
 
-class MouseInputHandler extends MouseInputAdapter
-{
-	public void mousePressed(MouseEvent e)
-	{
-		px = e.getX();
-		py = e.getY();
-		Component c = (Component)e.getSource();
-		ox = c.getX();
-		oy = c.getY();
-		ow = c.getWidth();
-		oh = c.getHeight();
+class MouseInputHandler extends MouseInputAdapter {
 
-		c.setFocusable(true);
-		c.requestFocus();
-		Parameter.Instance().Update((TreeNode)c);//用来更新子节点的位置
-	}
+	public void mousePressed(MouseEvent e) {
+		//if (e.getButton() == MouseEvent.BUTTON1) {
+			px = e.getX();
+			py = e.getY();
+			Component c = (Component) e.getSource();
+			ox = c.getX();
+			oy = c.getY();
+			ow = c.getWidth();
+			oh = c.getHeight();
 
-	public void mouseMoved(MouseEvent e)
-	{
-		Component c = (Component)e.getSource();
-		final int thickness = 10;
-		if(e.getX()<thickness && e.getY()<thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
-			dragType = 1;
-		}
-		else if(e.getX()>c.getWidth()-thickness && e.getY()<thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
-			dragType = 2;
-		}
-		else if(e.getX()<thickness && e.getY()>c.getHeight()-thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.SW_RESIZE_CURSOR));
-			dragType = 3;
-		}
-		else if(e.getX()>c.getWidth()-thickness && e.getY()>c.getHeight()-thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.SE_RESIZE_CURSOR));
-			dragType = 4;
-		}
-		else if(e.getX()<thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.W_RESIZE_CURSOR));
-			dragType = 5;
-		}
-		else if(e.getX()>c.getWidth()-thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR));
-			dragType = 6;
-		}
-		else if(e.getY()<thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.N_RESIZE_CURSOR));
-			dragType = 7;
-		}
-		else if(e.getY()>c.getHeight()-thickness)
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR));
-			dragType = 8;
-		}
-		else
-		{
-			c.setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-			dragType = 9;
-		}
-	}
+			c.setFocusable(true);
+			c.requestFocus();
+			Sidebar.Instance().Update((TreeNode) c);//用来更新子节点的位置
+		//}
 
-	public void mouseExited(MouseEvent e)
-	{
-		Component c = (Component)e.getSource();
-		c.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 	}
 
 
-	public void mouseReleased(MouseEvent e)
-	{
-		Component c = (Component)e.getSource();
-		int curx=c.getX();
-		int cury=c.getY();
-		int curw=c.getWidth();
-		int curh=c.getHeight();
+	public void mouseExited(MouseEvent e) {
+		//if (e.getButton() == MouseEvent.BUTTON1) {
+			Component c = (Component) e.getSource();
+			c.setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+
+		//}
+	}
+
+
+	public void mouseReleased(MouseEvent e) {
+		Component c = (Component) e.getSource();
+		int curx = c.getX();
+		int cury = c.getY();
+		int curw = c.getWidth();
+		int curh = c.getHeight();
 		c.setLocation(ox, oy);
 		c.setSize(ow, oh);
-		Fresh fresh=new Fresh(c, curx, cury,curw,curh,ox,oy,ow,oh);
+		Fresh fresh = new Fresh(c, curx, cury, curw, curh, ox, oy, ow, oh);
 	}
 
-	public void mouseDragged(MouseEvent e)
-	{
-		Component c = (Component)e.getSource();
-		int dx=e.getX()-px;
-		int dy=e.getY()-py;
-		if(dragType == 1)
-		{
-			c.setLocation(c.getX()+dx, c.getY());
-			//c.setSize(c.getWidth()-dx, c.getHeight());
+	public void mouseClicked(MouseEvent e) {
+		if (e.getButton() == MouseEvent.BUTTON3) {//右键单击出现菜单
+			Component c = (Component) e.getSource();
+			TreeNode.popupMenu.show(e.getComponent(), e.getX(), e.getY());
+		}
+		if(e.getButton()==MouseEvent.BUTTON1&&e.getClickCount()==2){//双击出现网址选择框
+			JFrame frame=new JFrame("网页链接");
+			frame.setUndecorated(true);
+			JPanel web=new JPanel();
+			web.setBorder(BorderFactory.createBevelBorder(0,Color.BLACK,Color.GRAY));
+			web.setLayout(null);
+			web.setSize(300,200);
+			JTextField link=new JTextField();
+			link.setColumns(20);
+			link.setEditable(true);
 
-			c.setLocation(c.getX(), c.getY()+dy);
-			//c.setSize(c.getWidth(), c.getHeight() - dy);
-		}
-		else if(dragType == 2)
-		{
-			//c.setSize(ow+dx, c.getHeight());
+			JLabel putlink=new JLabel();
+			JButton addlink=new JButton("添加网址");
+			JButton closelink=new JButton("关闭窗口");
+			JButton dellink=new JButton("删除网址");
 
-			c.setLocation(c.getX(), c.getY()+dy);
-			//c.setSize(c.getWidth(), c.getHeight() - dy);
-		}
-		else if(dragType == 3)
-		{
-			c.setLocation(c.getX()+dx, c.getY());
-			//c.setSize(c.getWidth()-dx, c.getHeight());
+			web.add(link);
+			web.add(addlink);
+			web.add(closelink);
+			web.add(dellink);
+			web.add(putlink);
+			frame.add(web);
+			link.setBounds(10,10,150,30);
+			addlink.setBounds(170,10,100,30);
+			closelink.setBounds(10,130,120,50);
+			dellink.setBounds(150,130,120,50);
+			putlink.setBounds(10,60,290,30);
+			closelink.setFont(new Font("宋体",Font.PLAIN,18));
+			dellink.setFont(new Font("宋体",Font.PLAIN,18));
 
-			//c.setSize(c.getWidth(), oh+dy);
+			if(Sidebar.Instance().GetTarget().weblink!=null) {
+				putlink.setForeground(Color.RED);
+				putlink.setText(Sidebar.Instance().GetTarget().weblink);
+			}
+			else putlink.setText("还没有收藏的网址");
+
+			frame.setBounds(Sidebar.Instance().GetTarget().getX()+200, Sidebar.
+					Instance().GetTarget().getY()+150,300,200);
+			addlink.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Component c = (Component) e.getSource();
+					Sidebar.Instance().GetTarget().weblink=link.getText();//网址赋值
+					ImageIcon weblink = new ImageIcon("src/iconSet/globe_with_meridians.png");
+					Sidebar.Instance().GetTarget().setIcon(weblink);
+					Sidebar.Instance().GetTarget().setSize(Sidebar.Instance().GetTarget().getWidth()+32,50);
+					putlink.setText(link.getText());
+					putlink.setForeground(Color.RED);
+				}
+			});
+			putlink.addMouseListener(new MouseAdapter() {//打开网址
+				@Override
+				public void mouseClicked(MouseEvent e) {
+					if (e.getClickCount() == 2 && e.getButton() == MouseEvent.BUTTON1) {
+						try {
+							Runtime.getRuntime().exec("cmd.exe /c start " + Sidebar.Instance().GetTarget().weblink);
+						} catch (Exception ex) {
+							ex.printStackTrace();
+
+						}
+					}
+				}
+			});
+
+			dellink.addActionListener(new ActionListener() {//删除网址
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					Sidebar.Instance().GetTarget().weblink=null;
+					if(Sidebar.Instance().GetTarget().getIcon()!=null) {
+						Sidebar.Instance().GetTarget().setIcon(null);
+						Sidebar.Instance().GetTarget().setSize(Sidebar.Instance().GetTarget().getWidth()-32,50);
+					}
+				}
+			});
+			closelink.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					frame.setVisible(false);
+				}
+			});
+
+			frame.setVisible(true);
+
+
 		}
-		else if(dragType == 4)
-		{
-			//c.setSize(ow+dx, c.getHeight());
-			//c.setSize(c.getWidth(), oh+dy);
-		}
-		else if(dragType == 5)
-		{
-			//c.setLocation(c.getX()+dx, c.getY());
-			//c.setSize(c.getWidth()-dx, c.getHeight());
-		}
-		else if(dragType == 6)
-		{
-			//c.setSize(ow+dx, c.getHeight());
-		}
-		else if(dragType == 7)
-		{
-			c.setLocation(c.getX(), c.getY()+dy);
-			//c.setSize(c.getWidth(), c.getHeight() - dy);
-		}
-		else if(dragType == 8)
-		{
-			//c.setSize(c.getWidth(), oh+dy);
-		}
-		else
-		{
-			c.setLocation(c.getX()+dx, c.getY()+dy);
-		}
-		MindMap.Instance().SizeUpdate();
-		MindMap.Instance().validate();
-		MindMap.Instance().repaint();
-		Parameter.Instance().Update((TreeNode)c);
 	}
+
+	public void mouseDragged(MouseEvent e) {
+			Component c = (Component) e.getSource();
+			int dx = e.getX() - px;
+			int dy = e.getY() - py;
+			if(c==MindMap.panel.getTree().Root()){
+				//如果是根节点
+				Moveall(MindMap.panel.getTree().Root(),dx,dy);
+
+			}
+			else c.setLocation(c.getX() + dx, c.getY() + dy);
+
+			MindMap.Instance().SizeUpdate();
+			MindMap.Instance().validate();
+			MindMap.Instance().repaint();
+			Sidebar.Instance().Update((TreeNode) c);
+		}
+
+
 	private int dragType;
 	private int px, py;
 	private int ox, oy;
@@ -474,7 +670,7 @@ class Fresh//实现拖拽的类
 		MindMap.Instance().SizeUpdate();
 		MindMap.Instance().validate();
 		MindMap.Instance().repaint();
-		Parameter.Instance().Update((TreeNode)c);//用于更新拖拽后的节点用
+		Sidebar.Instance().Update((TreeNode)c);//用于更新拖拽后的节点用
 	}
 
 	private Component c;

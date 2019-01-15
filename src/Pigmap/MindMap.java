@@ -1,17 +1,26 @@
 package Pigmap;
 
-import javax.imageio.plugins.jpeg.JPEGHuffmanTable;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+;
+import java.awt.Color;
+import java.awt.Dimension;;
+import java.awt.Graphics;
+import javax.swing.JPanel;
+
+
+/*
+此部分分工： 廖仁杰
+ */
+
+
+
+//思维导图的绘制面板类
 
 public class MindMap extends JPanel {
 	//思维导图的画图面板
 	private static  MindMap instance;//全局对象的建立
-	private static  MindMapBody panel;//定义一个面板
+	public static  MindMapBody panel;//定义一个面板
 	private  static  final  long serialVersionUID=1L;
 
 
@@ -53,9 +62,13 @@ public class MindMap extends JPanel {
 	}
 
 	public void UpdateSub(TreeNode cur){
-		panel.add(cur);
-		for(TreeNode i:cur.Children())
+		panel.add(cur);//添加节点的方法
+		for(TreeNode i:cur.getList()){
 			UpdateSub(i);
+			//panel.add(i);
+
+		}
+
 	}
 
 	public void Generate(){
@@ -63,34 +76,18 @@ public class MindMap extends JPanel {
 		Tree tree = new Tree();
 		tree.Parse(mod0,new Vec2(300,100));
 		Instance().Update(tree);
-		Parameter.Instance().Update(tree.Root());
+		Sidebar.Instance().Update(tree.Root());
 	}
 	//定义mindmap面板
-	private   MindMap() {
+	public  MindMap() {
 		//初始化函数初始化mindmap
 		setLayout(new BorderLayout());
-		JLabel J = new JLabel("Powered by Liao. & Zhang.");
+		JLabel J = new JLabel();
 		add(J, BorderLayout.NORTH);
 		J.setFont(new Font("宋体", Font.BOLD, 17));
 		panel = new MindMapBody();
-		//最重要的删除节点的方法监听
-		JButton b=new JButton("del");
-		add(b,BorderLayout.EAST);
-		b.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				//super.mouseClicked(e);
-				if(e.getButton()==MouseEvent.BUTTON1){
-					panel.remove(Parameter.Instance().GetTarget());
-					//repaint();
-					//validate();
-				}
-			}
-		});
 
 		//新建主体
-
-
 		panel.setLayout(null);
 		panel.setBackground(Color.WHITE);
 		add(new JScrollPane(panel), BorderLayout.CENTER);//可滚动的视图
@@ -103,12 +100,15 @@ public class MindMap extends JPanel {
 //定义一个body 作为面板来使用
 class MindMapBody extends JPanel {
 	//这是一个思维导图的面板
+
+	public Dimension getPreferredSize() {
+		return new Dimension(200, 200);
+	}
+
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
-
 		if(tree!=null){
 		tree.Root().Draw(g);//这里可以看出新的对象tree下的root（）方法里面有draw，这是最主要的
-
 		}
 	}
 	public  void setTree(Tree tree){
@@ -126,3 +126,5 @@ class MindMapBody extends JPanel {
 	private Tree tree;//在这里定义了一个树的对象
 	private static  final  long serialVersionUID=1L;
 }
+
+

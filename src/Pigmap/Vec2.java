@@ -1,4 +1,6 @@
 package Pigmap;
+//向量坐标计算类
+
 public class Vec2
 {
 	public double x;
